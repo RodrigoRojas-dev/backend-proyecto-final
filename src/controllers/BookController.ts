@@ -112,13 +112,49 @@ class BookController {
       }
 
       res.status(200).json({ success: true, data: updatedBook })
-      
+
     } catch (e) {
       const error = e as Error
 
       switch (error.name) {
         default:
           res.status(500).json({ success: false, error: error.message })
+          break;
+        case "NotFound":
+          res.status(404).json({ success: false, error: error.message })
+          break;
+      }
+    }
+  }
+
+  static deleteBook = async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params
+
+      if (!Types.ObjectId.isValid(id)) {
+        const error = new Error("ID inválido")
+        error.name = "InvalidInput"
+        throw error
+      }
+
+      const result = await Book.findByIdAndDelete(id)
+
+      if (!result) {
+        const error = new Error("Libro a eliminar no encontrado")
+        error.name = "NotFound"
+        throw error
+      }
+
+      res.status(200).json({ success: true, data: result })
+    } catch (e) {
+      const error = e as Error
+
+      switch (error.name) {
+        default:
+          res.status(500).json({ success: false, error: error.message })
+          break;
+        case "InvalidInput":
+          res.status(400).json({ success: false, error: error.message })
           break;
         case "NotFound":
           res.status(404).json({ success: false, error: error.message })
