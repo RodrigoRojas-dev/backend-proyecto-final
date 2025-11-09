@@ -2,6 +2,7 @@ import express, { Request, Response } from "express";
 import dotenv from "dotenv";
 import cors from "cors";
 import { authRouter } from "./routes/AuthRouter";
+import { connectDB } from "./config/db";
 
 dotenv.config()
 
@@ -25,4 +26,5 @@ app.use("/auth", authRouter)
 
 app.listen(PORT, () => {
   console.log(`✅ Servidor en escucha en el puerto http://localhost:${PORT}`)
+  connectDB()
 })
