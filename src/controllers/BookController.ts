@@ -39,6 +39,22 @@ class BookController {
       }
     }
   }
+
+  static getAllBooks = async (req: Request, res: Response) => {
+    try {
+      const books = await Book.find()
+
+      res.status(200).json({ succes: true, data: books })
+    } catch (e) {
+      const error = e as Error
+
+      switch (error.name) {
+        default:
+          res.status(500).json({ success: false, error: error.message })
+          break;
+      }
+    }
+  }
 }
 
 export default BookController
