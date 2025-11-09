@@ -3,6 +3,7 @@ import dotenv from "dotenv";
 import cors from "cors";
 import { authRouter } from "./routes/AuthRouter";
 import { connectDB } from "./config/db";
+import { bookRouter } from "./routes/BookRouter";
 
 dotenv.config()
 
@@ -23,6 +24,7 @@ app.get("/", (__: Request, res: Response) => {
 })
 
 app.use("/auth", authRouter)
+app.use("/books", bookRouter)
 
 app.listen(PORT, () => {
   console.log(`✅ Servidor en escucha en el puerto http://localhost:${PORT}`)
