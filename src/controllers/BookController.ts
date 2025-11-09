@@ -93,6 +93,39 @@ class BookController {
       }
     }
   }
+
+  static updateBook = async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params
+      const updateData = req.body
+
+      if (updateData.stock !== undefined) {
+        updateData.isAvailable = updateData.stock > 0;
+      }
+
+      const updatedBook = await Book.findByIdAndUpdate(id, updateData, { new: true, runValidators: true })
+
+      if (!updatedBook) {
+        const error = new Error("Libro a actualizar no encontrado")
+        error.name = "NotFound"
+        throw error
+      }
+
+      res.status(200).json({ success: true, data: updatedBook })
+      
+    } catch (e) {
+      const error = e as Error
+
+      switch (error.name) {
+        default:
+          res.status(500).json({ success: false, error: error.message })
+          break;
+        case "NotFound":
+          res.status(404).json({ success: false, error: error.message })
+          break;
+      }
+    }
+  }
 }
 
 export default BookController
