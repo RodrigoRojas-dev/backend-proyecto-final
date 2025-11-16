@@ -1,6 +1,8 @@
 import { model, Schema } from "mongoose";
-import { IBook } from "../interfaces/IBook";
+import { z } from "zod"
+import { zodBookSchema } from "../validators/BookValidator";
 
+export type IBook = z.infer<typeof zodBookSchema>
 
 const bookSchema = new Schema<IBook>({
   title: { type: String, required: true },
