@@ -1,29 +1,21 @@
 import { Request, Response } from "express";
 import { Book } from "../models/BookModel";
-import { Types } from "mongoose";
+import { z, ZodError } from "zod";
+import { zodBookSchema, ZObjectID } from "../validators/BookValidator";
 
 
 class BookController {
   static addBook = async (req: Request, res: Response) => {
     try {
-      const { title, subtitle, author, synopsis, genre, language, publisher, publicationDate, pageCount, format, price, stock } = req.body
+      const { body } = req
 
-      const isAvailable = stock > 0;
+      const validatedData = zodBookSchema.parse(body)
+
+      const isAvailable = validatedData.stock > 0;
 
       const newBook = new Book({
-        title,
-        subtitle,
-        author,
-        synopsis,
-        genre,
-        language,
-        publisher,
-        publicationDate,
-        pageCount,
-        format,
-        price,
-        stock,
-        isAvailable
+        ...validatedData,
+        isAvailable,
       })
 
       const savedBook = await newBook.save()
@@ -32,6 +24,18 @@ class BookController {
 
     } catch (e) {
       const error = e as Error
+
+      if (error instanceof z.ZodError) {
+
+        const typedError = e as ZodError
+
+        const errorDetails = z.treeifyError(typedError);
+
+        return res.status(400).json({
+          success: false,
+          error: errorDetails,
+        });
+      }
 
       switch (error.name) {
         default:
@@ -45,7 +49,7 @@ class BookController {
     try {
       const books = await Book.find()
 
-      res.status(200).json({ succes: true, data: books })
+      res.status(200).json({ success: true, data: books })
     } catch (e) {
       const error = e as Error
 
@@ -61,13 +65,9 @@ class BookController {
     try {
       const { id } = req.params
 
-      if (!Types.ObjectId.isValid(id)) {
-        const error = new Error("ID Invalido.");
-        error.name = "InvalidInput";
-        throw error;
-      }
+      const validatedId = ZObjectID.parse(id)
 
-      const book = await Book.findById(id)
+      const book = await Book.findById(validatedId)
 
       if (!book) {
         const error = new Error("Libro no encontrado")
@@ -79,17 +79,28 @@ class BookController {
 
     }
     catch (e) {
+
+      if (e instanceof ZodError) {
+
+        const typedError = e as ZodError
+
+        const errorDetails = z.treeifyError(typedError);
+
+        return res.status(400).json({
+          success: false,
+          error: errorDetails,
+        });
+      }
+
       const error = e as Error
 
       switch (error.name) {
         default:
           res.status(500).json({ success: false, error: error.message })
           break;
-        case "InvalidInput":
-          res.status(400).json({ success: false, error: error.message })
-          break;
         case "NotFound":
           res.status(404).json({ success: false, error: error.message })
+          break;
       }
     }
   }
@@ -99,11 +110,20 @@ class BookController {
       const { id } = req.params
       const updateData = req.body
 
-      if (updateData.stock !== undefined) {
-        updateData.isAvailable = updateData.stock > 0;
+      const validatedId = ZObjectID.parse(id);
+
+      const partialSchema = zodBookSchema.partial();
+      const validatedUpdateData = partialSchema.parse(updateData);
+
+      if (validatedUpdateData.stock !== undefined) {
+        validatedUpdateData.isAvailable = validatedUpdateData.stock > 0;
       }
 
-      const updatedBook = await Book.findByIdAndUpdate(id, updateData, { new: true, runValidators: true })
+      const updatedBook = await Book.findByIdAndUpdate(
+        validatedId,
+        validatedUpdateData,
+        { new: true }
+      )
 
       if (!updatedBook) {
         const error = new Error("Libro a actualizar no encontrado")
@@ -115,6 +135,18 @@ class BookController {
 
     } catch (e) {
       const error = e as Error
+
+      if (error instanceof z.ZodError) {
+
+        const typedError = e as ZodError
+
+        const errorDetails = z.treeifyError(typedError);
+
+        return res.status(400).json({
+          success: false,
+          error: errorDetails,
+        });
+      }
 
       switch (error.name) {
         default:
@@ -131,13 +163,9 @@ class BookController {
     try {
       const { id } = req.params
 
-      if (!Types.ObjectId.isValid(id)) {
-        const error = new Error("ID inválido")
-        error.name = "InvalidInput"
-        throw error
-      }
+      const validatedId = ZObjectID.parse(id);
 
-      const result = await Book.findByIdAndDelete(id)
+      const result = await Book.findByIdAndDelete(validatedId)
 
       if (!result) {
         const error = new Error("Libro a eliminar no encontrado")
@@ -148,6 +176,18 @@ class BookController {
       res.status(200).json({ success: true, data: result })
     } catch (e) {
       const error = e as Error
+
+      if (error instanceof z.ZodError) {
+
+        const typedError = e as ZodError
+
+        const errorDetails = z.treeifyError(typedError);
+
+        return res.status(400).json({
+          success: false,
+          error: errorDetails,
+        });
+      }
 
       switch (error.name) {
         default:

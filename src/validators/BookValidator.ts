@@ -34,4 +34,4 @@ const zodBookSchema = z.object({
   }),
 })
 
-export { zodBookSchema }
+export { zodBookSchema, ZObjectID }
