@@ -3,8 +3,6 @@ import bcrypt from "bcryptjs";
 import { User } from "../models/UserModel";
 import jwt from "jsonwebtoken";
 
-const SECRET_KEY = process.env.JWT_SECRET!
-
 class AuthController {
   static register = async (req: Request, res: Response) => {
     try {
@@ -28,6 +26,9 @@ class AuthController {
   }
 
   static login = async (req: Request, res: Response) => {
+
+    const SECRET_KEY = process.env.JWT_SECRET!
+    
     try {
       const { email, password } = req.body;
 
